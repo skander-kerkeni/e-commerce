@@ -1,16 +1,20 @@
 const express = require("express");
 const morgan = require("morgan");
 const cors= require("cors");
-
+const bodyParser= require("body-parser");
 const app=express();
 require("dotenv").config({
     path:'./index.env'
 });
+//mongoDB
+const connectDB = require('./src/DA/db');
+connectDB();
 
-app.use(express.urlencoded({extended:true}));
+app.use(express.json());
 app.use(morgan('dev'));
 app.use(cors());
-
+// Routes
+app.use('/api/user/',require('./src/routes/auth.route'));
 app.get('/',(req,res)=>{
     res.send('test Route');
 });
