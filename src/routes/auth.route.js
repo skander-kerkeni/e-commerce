@@ -5,11 +5,24 @@ const bcrypt = require('bcryptjs'); // encrypt password
 // Check validation for requests
 const { check, validationResult } = require('express-validator');
 const gravatar = require('gravatar'); // get user image by email
-
+const auth=require('../service/auth');
 
 // models
 const User = require('../types/User');
+//@route POST api/user
+//@desc user information
+//@access private
+router.get('/',auth,async (req,res)=>{
+    try{
+        //Get user info by id
+        const user = await User.findById(req.user.id).select('-password')
+        res.json(user)
+    }catch (error){
+        console.log(error.message);
+        res.status(500).send('Server error');
 
+    }
+})
 
 //@route POST api/user/register
 //@desc register
@@ -38,9 +51,6 @@ router.post(
         }
         // get name and email and password from request
         const { name, email, password } = req.body;
-        console.log("999"+name);
-        console.log("2222"+email);
-        console.log("5555"+password);
 
         try {
             // Check if user already exist
@@ -51,7 +61,7 @@ router.post(
                 return res.status(400).json({
                     errors: [
                         {
-                            msg: 'User already exists',
+                            msg: 'Email deja utilisé',
                         },
                     ],
                 });
@@ -104,6 +114,60 @@ router.post(
         }
     }
 );
+//@route POST api/user/login
+//@desc register
+//@access Public
+router.post('/login',[
+    check('email','verfiier votre email').isEmail(),
+    check('password','le mot de passe est vide!').exists()
+],async (req,res)=>{
+    const errors=validationResult(req);
+    if(!errors.isEmpty()){
+        return res.status(400).json({
+            errors:errors.array()
+        })
+    }
+    const{email,password}=req.body;
+    try{
+        let user = await User.findOne({
+            email
+        });
+        if(!user){
+            return res.status(400).json({
+                errors:[{
+                    msg: "Invalid"
+                }]
+            })
+        }
+        const isMatch = await bcrypt.compare(password,user.password);
+        if(!isMatch){
+            return res.status(400).json({
+                errors:[{
+                    msg: "Invalid"
+                }]
+            })
+        }
 
 
+        const payload={
+            user:{
+                id: user.id
+            }
+        }
+        jwt.sign(
+            payload,
+            process.env.JWT_SECRET,
+            {
+                expiresIn: 360000, // for development for production it will 3600
+            },
+            (err, token) => {
+                if (err) throw err;
+                res.json({ token });
+            }
+        );
+    }catch (error){
+        console.log(error.message);
+        res.status(500).send('Server error');
+    }
+})
 module.exports = router
