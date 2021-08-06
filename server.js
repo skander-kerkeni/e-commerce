@@ -13,10 +13,15 @@ connectDB();
 app.use(express.json());
 app.use(morgan('dev'));
 app.use(cors());
-// Routes
+// Routes user
+
 app.use('/api/user/',require('./src/routes/auth.route'));
-app.get('/',(req,res)=>{
-    res.send('test Route');
+
+// Route category
+
+app.use('/api/category/', require('./src/routes/category.route'));
+app.get('/', (req, res) => {
+    res.send('test route => home page');
 });
 //page not founded
 app.use((req,res)=>{
