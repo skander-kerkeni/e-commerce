@@ -20,6 +20,7 @@ app.use('/api/user/',require('./src/routes/auth.route'));
 // Route category
 
 app.use('/api/category/', require('./src/routes/category.route'));
+app.use('/api/product/', require('./src/routes/product.route'));
 app.get('/', (req, res) => {
     res.send('test route => home page');
 });
